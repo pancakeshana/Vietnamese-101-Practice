@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffbf42">
+    <title>Vietnamese Practice</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #5e0b00;
+            --gold: #ffbf42;
+            --light-gold: #ffd878;
+            --paper: #fff8e8;
+            --muted: #875044;
+            --green: #32653a;
+            --red: #a12b1e;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            background: var(--gold);
+            font-family: ui-rounded, "Avenir Next", Avenir, system-ui, sans-serif;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            color: inherit;
+        }
+
+        .page {
+            width: min(960px, 100%);
+            margin: 0 auto;
+            padding: 32px 22px 48px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 34px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            letter-spacing: -.03em;
+        }
+
+        .brand-mark {
+            display: grid;
+            place-items: center;
+            width: 42px;
+            height: 42px;
+            border: 2px solid var(--ink);
+            border-radius: 14px;
+            background: var(--light-gold);
+            font-size: 22px;
+        }
+
+        .brand-name {
+            font-size: 17px;
+        }
+
+        .top-note {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        .hero {
+            max-width: 660px;
+            margin: 0 auto 26px;
+            text-align: center;
+        }
+
+        .eyebrow {
+            margin: 0 0 10px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-family: ui-rounded, "Avenir Next", Avenir, system-ui, sans-serif;
+            font-size: clamp(38px, 7vw, 62px);
+            line-height: 1.04;
+            letter-spacing: -.045em;
+        }
+
+        .hero p {
+            margin: 14px 0 0;
+            color: var(--muted);
+            font-size: 16px;
+        }
+
+        .card {
+            width: min(620px, 100%);
+            margin: 0 auto;
+            padding: clamp(20px, 5vw, 34px);
+            border: 2px solid var(--ink);
+            border-radius: 24px;
+            background: var(--paper);
+            box-shadow: 8px 8px 0 var(--ink);
+        }
+
+        .tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 6px;
+            border: 1px solid #e9c778;
+            border-radius: 14px;
+            background: #fff0ca;
+        }
+
+        .tab {
+            min-height: 44px;
+            border: 0;
+            border-radius: 10px;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 750;
+            transition: background .15s, transform .15s;
+        }
+
+        .tab:hover {
+            transform: translateY(-1px);
+        }
+
+        .tab.active {
+            background: var(--gold);
+            box-shadow: 0 2px 0 rgba(94, 11, 0, .15);
+        }
+
+        .progress-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 25px 0 9px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 750;
+        }
+
+        .progress-track {
+            height: 8px;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #f0dfbb;
+        }
+
+        .progress-bar {
+            width: 0;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--gold);
+            transition: width .25s ease;
+        }
+
+        .question-label {
+            margin: 27px 0 8px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .question {
+            min-height: 48px;
+            margin: 0;
+            font-family: ui-rounded, "Avenir Next", Avenir, system-ui, sans-serif;
+            font-size: clamp(25px, 5vw, 34px);
+            line-height: 1.2;
+        }
+
+        .meaning {
+            min-height: 22px;
+            margin: 10px 0 22px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .answer-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .answer-input {
+            min-width: 0;
+            flex: 1;
+            height: 52px;
+            padding: 0 15px;
+            border: 1.5px solid #d8bd82;
+            border-radius: 12px;
+            outline: none;
+            background: white;
+            color: var(--ink);
+            font-size: 16px;
+        }
+
+        .answer-input::placeholder {
+            color: #b59c83;
+        }
+
+        .answer-input:focus {
+            border-color: var(--ink);
+            box-shadow: 0 0 0 3px #ffbf4266;
+        }
+
+        .button {
+            min-height: 48px;
+            padding: 0 19px;
+            border: 1.5px solid var(--ink);
+            border-radius: 12px;
+            background: var(--gold);
+            cursor: pointer;
+            font-weight: 800;
+            transition: transform .15s, filter .15s;
+        }
+
+        .button:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.03);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button:focus-visible,
+        .tab:focus-visible {
+            outline: 3px solid var(--ink);
+            outline-offset: 3px;
+        }
+
+        .feedback {
+            min-height: 24px;
+            margin: 12px 0 0;
+            font-size: 14px;
+        }
+
+        .feedback.correct {
+            color: var(--green);
+        }
+
+        .feedback.incorrect {
+            color: var(--red);
+        }
+
+        .helper-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 19px;
+            padding-top: 16px;
+            border-top: 1px solid #eadbb9;
+        }
+
+        .text-button {
+            padding: 5px 0;
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 750;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .text-button:hover {
+            color: var(--ink);
+        }
+
+        .footer-note {
+            margin: 27px auto 0;
+            color: var(--muted);
+            text-align: center;
+            font-size: 12px;
+        }
+
+        @media (max-width: 520px) {
+            .page {
+                padding: 22px 16px 36px;
+            }
+
+            header {
+                margin-bottom: 27px;
+            }
+
+            .top-note {
+                font-size: 11px;
+            }
+
+            .answer-row {
+                flex-direction: column;
+            }
+
+            .answer-row .button {
+                width: 100%;
+            }
+
+            .helper-row {
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page">
+        <header>
+            <div class="brand"><span class="brand-mark" aria-hidden="true">ở</span><span
+                    class="brand-name">H.Pham</span></div>
+            <span class="top-note">Updated October 2026.</span>
+        </header>
+
+        <section class="hero" aria-labelledby="page-title">
+            <p class="eyebrow">"Tôi tên là Optimus Prime."</p> 
+            <!---Mesa College VIET 101-->
+            <h1 id="page-title">Practice Vietnamese</h1>
+            <p>I mean, we gotta know our vocabulary and accents somehow.</p>
+        </section>
+
+        <section class="card" aria-label="Vietnamese practice quiz">
+            <div class="tabs" role="tablist" aria-label="Practice mode">
+                <button class="tab active" id="vocab-tab" type="button" role="tab" aria-selected="true">Word
+                    Spelling</button>
+                <button class="tab" id="sentence-tab" type="button" role="tab" aria-selected="false">Sentence
+                    Translation</button>
+            </div>
+
+            <div class="progress-row"><span id="mode-label">WORD SPELLING</span><span id="attempt-label">3 tries</span>
+            </div>
+            <div class="progress-track" role="progressbar" aria-label="Attempts remaining" aria-valuemin="0"
+                aria-valuemax="3" aria-valuenow="3">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+
+            <p class="question-label" id="question-label">Write this word in Vietnamese.</p>
+            <h2 class="question" id="question">Hello / hi</h2>
+            <p class="meaning" id="meaning">Yes, accents do matter. Just give it a try.</p>
+
+            <form id="answer-form" autocomplete="off">
+                <div class="answer-row">
+                    <input class="answer-input" id="answer" type="text" placeholder="Type your answer…"
+                        aria-label="Your Vietnamese answer" required>
+                    <button class="button" id="submit-button" type="submit">Check answer</button>
+                </div>
+            </form>
+            <p class="feedback" id="feedback" role="status" aria-live="polite"></p>
+
+            <div class="helper-row">
+                <button class="text-button" id="skip-button" type="button">Skip this question. →</button>
+                <button class="text-button" id="next-button" type="button" hidden>Next question. →</button>
+            </div>
+        </section>
+        <p class="footer-note">Tip: Use your device’s Vietnamese Telex keyboard.</p>
+    </main>
+
+    <script>
+        const vocabulary = [
+            { answer: 'CHÀO', clue: 'Hello / hi' },
+            { answer: 'ANH', clue: 'Older brother / male friend' },
+            { answer: 'TÔI', clue: 'I / me' },
+            { answer: 'TÊN', clue: 'Name' },
+            { answer: 'LÀ', clue: 'Is / am / are' },
+            { answer: 'NAM', clue: 'Nam (a male name)' },
+            { answer: 'CHỊ', clue: 'Older sister' },
+            { answer: 'GÌ', clue: 'What' },
+            { answer: 'RẤT', clue: 'Very' },
+            { answer: 'VUI', clue: 'Happy / pleased' },
+            { answer: 'ĐƯỢC', clue: 'To be allowed / can' },
+            { answer: 'LÀM', clue: 'To do / make' },
+            { answer: 'QUEN', clue: 'To know / be familiar with' },
+            { answer: 'VỚI', clue: 'With' },
+            { answer: 'ÔNG', clue: 'Grandfather / sir' },
+            { answer: 'CŨNG', clue: 'Also / too' },
+            { answer: 'BIẾT', clue: 'To know' },
+            { answer: 'KHỎE', clue: 'Healthy / well' },
+            { answer: 'CÁM ƠN', clue: 'Thank you' },
+            { answer: 'BÀ', clue: 'Grandmother / ma’am' },
+            { answer: 'ĐÂY', clue: 'This / here' },
+            { answer: 'AI', clue: 'Who' },
+            { answer: 'SINH', clue: 'To be born' },
+            { answer: 'VIÊN', clue: 'Member / person' },
+            { answer: 'LAN', clue: 'Lan (a female name)' },
+            { answer: 'MUA', clue: 'To buy' },
+            { answer: 'NÀY', clue: 'This' },
+            { answer: 'NGỌT', clue: 'Sweet' },
+            { answer: 'CÓ', clue: 'To have / there is' },
+            { answer: 'Ô TÔ', clue: 'Car' },
+            { answer: 'XE', clue: 'Vehicle / car' },
+            { answer: 'HƠI', clue: 'Steam / a little' },
+            { answer: 'ĐÂU', clue: 'Where' },
+            { answer: 'NGƯỜI', clue: 'Person / people' },
+            { answer: 'NƯỚC', clue: 'Water / country' },
+            { answer: 'NÀO', clue: 'Which / what kind' },
+            { answer: 'HỌC', clue: 'To study / learn' },
+            { answer: 'TIẾNG', clue: 'Language / sound' },
+            { answer: 'VIỆT', clue: 'Vietnamese' },
+            { answer: 'Ở', clue: 'At / in / to live' },
+            { answer: 'CHO', clue: 'For / give / let' },
+            { answer: 'HỎI', clue: 'To ask' },
+            { answer: 'MỸ', clue: 'American / America' },
+            { answer: 'NÓI', clue: 'To speak / say' },
+            { answer: 'NHÀ', clue: 'House / home' }
+        ];
+        const sentences = [
+            { answer: 'CHÀO ANH!', clue: 'Hello, brother!' },
+            { answer: 'TÔI TÊN LÀ NAM.', clue: 'My name is Nam.' },
+            { answer: 'CHỊ TÊN LÀ GÌ?', clue: 'What is your sister’s name?' },
+            { answer: 'RẤT VUI ĐƯỢC LÀM QUEN VỚI ÔNG.', clue: 'It is very nice to meet you, sir.' },
+            { answer: 'TÔI CŨNG RẤT VUI ĐƯỢC BIẾT ANH.', clue: 'I am also very happy to know you.' },
+            { answer: 'TÔI KHỎE, CÁM ƠN BÀ.', clue: 'I am well, thank you, ma’am.' },
+            { answer: 'ĐÂY LÀ AI?', clue: 'Who is this?' },
+            { answer: 'AI BIẾT?', clue: 'Who knows?' },
+            { answer: 'NAM LÀ SINH VIÊN.', clue: 'Nam is a student.' },
+            { answer: 'LAN MUA CAM.', clue: 'Lan buys oranges.' },
+            { answer: 'CAM NÀY NGỌT.', clue: 'This orange is sweet.' },
+            { answer: 'NAM CÓ Ô TÔ/XE HƠI.', clue: 'Nam has a car.' }
+        ];
+
+        const $ = (id) => document.getElementById(id);
+        const tabs = [$('vocab-tab'), $('sentence-tab')];
+        let mode = 'vocab';
+        let current = null;
+        let previousIndex = -1;
+        let attempts = 3;
+        let locked = false;
+
+        function questionList() { return mode === 'vocab' ? vocabulary : sentences; }
+        function nextQuestion() {
+            const list = questionList();
+            let index = Math.floor(Math.random() * list.length);
+            if (list.length > 1 && index === previousIndex) index = (index + 1) % list.length;
+            previousIndex = index;
+            current = list[index];
+            attempts = 3;
+            locked = false;
+            $('mode-label').textContent = mode === 'vocab' ? 'WORD SPELLING' : 'SENTENCE TRANSLATION';
+            $('question-label').textContent = mode === 'vocab' ? 'Write the corresponding word in Vietnamese using the given definition.' : 'Translate this sentence into Vietnamese.';
+            $('question').textContent = current.clue;
+            $('meaning').textContent = mode === 'vocab' ? 'Yes, accents do matter. Just give it a try.' : 'Use the Vietnamese sentence and punctuation.';
+            $('answer').value = '';
+            $('answer').disabled = false;
+            $('submit-button').disabled = false;
+            $('submit-button').textContent = 'Check answer';
+            $('feedback').textContent = '';
+            $('feedback').className = 'feedback';
+            $('next-button').hidden = true;
+            updateProgress();
+            $('answer').focus();
+        }
+        function updateProgress() {
+            $('attempt-label').textContent = attempts + (attempts === 1 ? ' try' : ' tries');
+            $('progress-bar').style.width = ((3 - attempts) / 3 * 100) + '%';
+            document.querySelector('[role="progressbar"]').setAttribute('aria-valuenow', String(attempts));
+        }
+        function normalize(value) {
+            return value.trim().normalize('NFC').replace(/\s+/g, ' ').toLocaleUpperCase('vi');
+        }
+        function checkAnswer(event) {
+            event.preventDefault();
+            if (locked) return;
+            const answer = normalize($('answer').value);
+            if (!answer) { $('answer').focus(); return; }
+            if (answer === normalize(current.answer)) {
+                locked = true;
+                $('feedback').textContent = 'Correct! Giỏi lắm — well done.';
+                $('feedback').className = 'feedback correct';
+                finishQuestion();
+                return;
+            }
+            attempts--;
+            updateProgress();
+            if (attempts > 0) {
+                $('feedback').textContent = 'Not quite. Try again—you have ' + attempts + ' more ' + (attempts === 1 ? 'try' : 'tries') + '.';
+                $('feedback').className = 'feedback incorrect';
+                $('answer').select();
+            } else {
+                locked = true;
+                $('feedback').textContent = 'The answer is: ' + current.answer;
+                $('feedback').className = 'feedback incorrect';
+                finishQuestion();
+            }
+        }
+        function finishQuestion() {
+            $('answer').disabled = true;
+            $('submit-button').disabled = true;
+            $('next-button').hidden = false;
+            $('next-button').focus();
+        }
+        function setMode(nextMode) {
+            mode = nextMode;
+            previousIndex = -1;
+            tabs.forEach((tab, index) => {
+                const active = index === (mode === 'vocab' ? 0 : 1);
+                tab.classList.toggle('active', active);
+                tab.setAttribute('aria-selected', String(active));
+            });
+            nextQuestion();
+        }
+
+        $('answer-form').addEventListener('submit', checkAnswer);
+        $('next-button').addEventListener('click', nextQuestion);
+        $('skip-button').addEventListener('click', nextQuestion);
+        $('vocab-tab').addEventListener('click', () => setMode('vocab'));
+        $('sentence-tab').addEventListener('click', () => setMode('sentence'));
+        nextQuestion();
+    </script>
+</body>
+
+</html>
