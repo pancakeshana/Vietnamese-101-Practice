@@ -200,18 +200,18 @@
 
         .answer-row {
             display: flex;
+            align-items: center;
             gap: 10px;
         }
 
         .answer-input {
-            min-width: 0;
-            flex: 1;
-            height: 52px;
+            width: 100%;
             padding: 0 15px;
             border: 1.5px solid #d8bd82;
             border-radius: 12px;
             outline: none;
             background: white;
+            height: 60px;
             color: var(--ink);
             font-size: 16px;
         }
@@ -226,7 +226,8 @@
         }
 
         .button {
-            min-height: 48px;
+            height: 60px;
+            min-width: 200px;
             padding: 0 19px;
             border: 1.5px solid var(--ink);
             border-radius: 12px;
@@ -416,7 +417,7 @@
             { answer: 'NÀO', clue: 'Which / what kind' },
             { answer: 'HỌC', clue: 'To study / learn' },
             { answer: 'TIẾNG', clue: 'Language / sound' },
-            { answer: 'VIỆT', clue: 'Vietnamese' },
+            { answer: 'TIẾNG VIỆT', clue: 'Vietnamese' },
             { answer: 'Ở', clue: 'At / in / to live' },
             { answer: 'CHO', clue: 'For / give / let' },
             { answer: 'HỎI', clue: 'To ask' },
@@ -463,7 +464,7 @@
             $('answer').value = '';
             $('answer').disabled = false;
             $('submit-button').disabled = false;
-            $('submit-button').textContent = 'Check answer';
+            $('submit-button').textContent = 'Check answer.';
             $('feedback').textContent = '';
             $('feedback').className = 'feedback';
             $('next-button').hidden = true;
@@ -485,7 +486,7 @@
             if (!answer) { $('answer').focus(); return; }
             if (answer === normalize(current.answer)) {
                 locked = true;
-                $('feedback').textContent = 'Correct! Giỏi lắm — well done.';
+                $('feedback').textContent = 'Correct! Well done! Or shall I say, giỏi lắm!';
                 $('feedback').className = 'feedback correct';
                 finishQuestion();
                 return;
