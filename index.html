@@ -291,6 +291,55 @@
             color: var(--ink);
         }
 
+        .word-bank {
+            width: min(620px, 100%);
+            margin: 26px auto 0;
+            padding: clamp(18px, 4vw, 24px);
+            border: 2px solid var(--ink);
+            border-radius: 24px;
+            background: var(--paper);
+            box-shadow: 8px 8px 0 var(--ink);
+        }
+
+        .word-bank h2 {
+            margin: 0;
+            font-size: 20px;
+            letter-spacing: -.03em;
+        }
+
+        .word-bank-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 16px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .word-bank-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 10px 12px;
+            border: 1px solid var(--ink);
+            border-radius: 14px;
+            background: #fffaf0;
+            color: var(--ink);
+            min-width: 108px;
+        }
+
+        .word-bank-item span {
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .word-bank-item small {
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+
         .footer-note {
             margin: 27px auto 0;
             color: var(--muted);
@@ -374,6 +423,11 @@
                 <button class="text-button" id="next-button" type="button" hidden>Next question. →</button>
             </div>
         </section>
+
+        <section class="word-bank" aria-labelledby="word-bank-title">
+            <h2 id="word-bank-title">Word bank</h2>
+            <ul class="word-bank-list" id="word-bank-list"></ul>
+        </section>
         <p class="footer-note">Tip: Use your device’s Vietnamese Telex keyboard.</p>
     </main>
 
@@ -423,7 +477,35 @@
             { answer: 'HỎI', clue: 'To ask' },
             { answer: 'MỸ', clue: 'American / America' },
             { answer: 'NÓI', clue: 'To speak / say' },
-            { answer: 'NHÀ', clue: 'House / home' }
+            { answer: 'NHÀ', clue: 'House / home' },
+            { answer: 'TRƯỜNG', clue: 'School / institution' },
+            { answer: 'ĐẠI', clue: 'Big / large / university' },
+            { answer: 'SÀI', clue: 'Sài (part of Sài Gòn / Saigon)' },
+            { answer: 'GÒN', clue: 'Gòn (part of Sài Gòn / Saigon)' },
+            { answer: 'QUẬN', clue: 'District / ward' },
+            { answer: '3', clue: 'Three' },
+            { answer: 'THẤY', clue: 'To see' },
+            { answer: 'CÂY', clue: 'Tree' },
+            { answer: 'DỪA', clue: 'Coconut' },
+            { answer: 'VẼ', clue: 'To draw / paint' },
+            { answer: 'HAI', clue: 'Two / several' },
+            { answer: 'CON', clue: 'Child / animal / classifier' },
+            { answer: 'MÈO', clue: 'Cat' },
+            { answer: 'ẤY', clue: 'That / those' },
+            { answer: 'MUỐN', clue: 'To want' },
+            { answer: 'MƯỢN', clue: 'To borrow / lend' },
+            { answer: 'MẤY', clue: 'How many / several' },
+            { answer: 'QUYỂN', clue: 'Book / volume (classifier)' },
+            { answer: 'SÁCH', clue: 'Book' },
+            { answer: 'CĂN', clue: 'Room / house (classifier)' },
+            { answer: 'PHÒNG', clue: 'Room' },
+            { answer: 'ĐẸP', clue: 'Beautiful / pretty' },
+            { answer: 'TỪ', clue: 'Word / from' },
+            { answer: 'ĐIỂN', clue: 'Dictionary / encyclopedia' },
+            { answer: 'CÁI', clue: 'Thing / object (classifier)' },
+            { answer: 'BÀN', clue: 'Table' },
+            { answer: 'MÀU', clue: 'Color' },
+            { answer: 'TRẮNG', clue: 'White' }
         ];
         const sentences = [
             /*
@@ -456,8 +538,60 @@
             { answer: 'NAM NÓI TIẾNG GÌ?', clue: 'What language does Nam speak?' }
         ];
 
+        const wordBankEntries = [
+            ['ANH', 'Older brother / male friend'],
+            ['LÀ', 'Is / am / are'],
+            ['NGƯỜI', 'Person / people'],
+            ['NƯỚC', 'Water / country'],
+            ['NÀO', 'Which / what kind'],
+            ['TÔI', 'I / me'],
+            ['MỸ', 'American / America'],
+            ['HỌC', 'To study / learn'],
+            ['Ở', 'At / in / to live'],
+            ['TRƯỜNG', 'School / institution'],
+            ['ĐẠI', 'Big / large / university'],
+            ['SÀI', 'Sài (part of Sài Gòn / Saigon)'],
+            ['GÒN', 'Gòn (part of Sài Gòn / Saigon)'],
+            ['NHÀ', 'House / home'],
+            ['QUẬN', 'District / ward'],
+            ['3', 'Three'],
+            ['THẤY', 'To see'],
+            ['NĂM', 'Five'],
+            ['CÂY', 'Tree'],
+            ['DỪA', 'Coconut'],
+            ['VẼ', 'To draw / paint'],
+            ['HAI', 'Two / several'],
+            ['CON', 'Child / animal / classifier'],
+            ['MÈO', 'Cat'],
+            ['ẤY', 'That / those'],
+            ['MUỐN', 'To want'],
+            ['MƯỢN', 'To borrow / lend'],
+            ['MẤY', 'How many / several'],
+            ['QUYỂN', 'Book / volume (classifier)'],
+            ['SÁCH', 'Book'],
+            ['CĂN', 'Room / house (classifier)'],
+            ['PHÒNG', 'Room'],
+            ['NÀY', 'This / these'],
+            ['ĐẸP', 'Beautiful / pretty'],
+            ['ĐÂY', 'This / here'],
+            ['TỪ', 'Word / from'],
+            ['ĐIỂN', 'Dictionary / encyclopedia'],
+            ['CÁI', 'Thing / object (classifier)'],
+            ['BÀN', 'Table'],
+            ['MÀU', 'Color'],
+            ['GÌ', 'What'],
+            ['TRẮNG', 'White'],
+            ['NAM', 'Nam (a male name)'],
+            ['NÓI', 'To speak / say'],
+            ['TIẾNG', 'Language / sound']
+        ];
+
         const $ = (id) => document.getElementById(id);
         const tabs = [$('vocab-tab'), $('sentence-tab')];
+        const wordBankList = $('word-bank-list');
+        wordBankList.innerHTML = wordBankEntries
+            .map(([word, definition]) => `<li class="word-bank-item"><span>${word}</span><small>${definition}</small></li>`)
+            .join('');
         let mode = 'vocab';
         let current = null;
         let previousIndex = -1;
