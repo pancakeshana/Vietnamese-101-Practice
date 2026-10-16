@@ -156,16 +156,23 @@ function loadClassifierQuestions() {
 function parseNumbers(text) {
     //The JS split() splits a String into an array of elements, 
     //depending on the delimiter between, such as " " or "," or "-".
-    const numArray = text.split(" - ");
+
+    //To split between line by line.
+    const lines = text.split(/\r?\n/);
     const questions = [];
 
     //Oh yeah, let's apply some Java.
-    for (let i = 0; i < numArray.length; i + 2) {
+    for (let i = 0; i < lines.length; i++) {
+        //To split within each of the lines.
+        const parts = lines[i].split(" - ");
+        if (parts.length !== 2) continue;
+
         questions.push({
-            answer: numArray[i + 1],
-            clue: numArray[i]
+            //Part[0] refers to the digit. Ex. 0, 1, 100.
+            clue: parts[0].trim(),
+            //Part[1] refers to the Vietnamese translation, as per in the file.
+            answer: parts[1].trim()
         });
-        answers.push(numArray[i + 1]);
     }
 
     //Throws error if there's literally nothing to base questions off of.
