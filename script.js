@@ -212,11 +212,19 @@ function loadNumbers() {
 }
 
 function parseSentenceBuilderWords(text, fileName) {
-    const words = Array.from(new Set(text.split(/\r?\n/).map((word) => word.trim()).filter(Boolean)));
-    if (words.length < 3) {
+    const words = text.split(/\r?\n/).map((line) => {
+        if (!line.trim()) return null;
+        const [word, translation, thirdPerson] = line.split('|').map((part) => part.trim());
+        if (!word || !translation) {
+            throw new Error(fileName + ' entries must use Vietnamese | English format.');
+        }
+        return { word: word, translation: translation, thirdPerson: thirdPerson || '' };
+    }).filter(Boolean);
+    const uniqueWords = Array.from(new Map(words.map((entry) => [normalize(entry.word), entry])).values());
+    if (uniqueWords.length < 3) {
         throw new Error(fileName + ' needs at least three distinct words for Sentence Builder.');
     }
-    return words;
+    return uniqueWords;
 }
 
 function shuffleSentenceBuilderItems(items) {
@@ -230,14 +238,12 @@ function shuffleSentenceBuilderItems(items) {
 
 function createSentenceBuilderChoices(words, answer, kind) {
     const choices = answer === null
-        ? shuffleSentenceBuilderItems(words).slice(0, 3).map((word) => ({ word, kind }))
+        ? shuffleSentenceBuilderItems(words).slice(0, 3)
         : [
-            { word: answer, kind },
-            ...shuffleSentenceBuilderItems(words.filter((word) => word !== answer))
-                .slice(0, 2)
-                .map((word) => ({ word, kind }))
+            answer,
+            ...shuffleSentenceBuilderItems(words.filter((word) => word.word !== answer.word)).slice(0, 2)
         ];
-    return shuffleSentenceBuilderItems(choices);
+    return shuffleSentenceBuilderItems(choices.map((choice) => ({ ...choice, kind })));
 }
 
 let sentenceBuilderQuestions = null;
@@ -262,8 +268,8 @@ function loadSentenceBuilderQuestions() {
             .then((text) => parseSentenceBuilderWords(text, fileName))))
             .then(([nouns, verbs, adjectives]) => {
                 const predicates = [
-                    ...verbs.map((word) => ({ word: word, kind: 'Verb' })),
-                    ...adjectives.map((word) => ({ word: word, kind: 'Adjective' }))
+                    ...verbs.map((word) => ({ ...word, kind: 'Verb' })),
+                    ...adjectives.map((word) => ({ ...word, kind: 'Adjective' }))
                 ];
                 sentenceBuilderQuestions = [];
 
@@ -271,11 +277,11 @@ function loadSentenceBuilderQuestions() {
                     predicates.forEach((predicate) => {
                         const choices = [
                             ...createSentenceBuilderChoices(nouns, noun, 'Noun'),
-                            ...createSentenceBuilderChoices(verbs, predicate.kind === 'Verb' ? predicate.word : null, 'Verb'),
-                            ...createSentenceBuilderChoices(adjectives, predicate.kind === 'Adjective' ? predicate.word : null, 'Adjective')
+                            ...createSentenceBuilderChoices(verbs, predicate.kind === 'Verb' ? predicate : null, 'Verb'),
+                            ...createSentenceBuilderChoices(adjectives, predicate.kind === 'Adjective' ? predicate : null, 'Adjective')
                         ];
                         sentenceBuilderQuestions.push({
-                            answer: noun + ' ' + predicate.word,
+                            answer: noun.word + ' ' + predicate.word,
                             blocks: [],
                             choices: shuffleSentenceBuilderItems(choices)
                         });
@@ -362,7 +368,7 @@ function nextQuestion() {
         : mode === 'classifiers'
             ? 'Type the classifier only (for example, cái).'
         : mode === 'builder'
-            ? 'Choose a noun, then a verb or adjective.'
+            ? 'Select words to see their English translation. Tap a noun, then a verb or adjective. Tap a chosen word again to remove it.'
             : 'Translate the number in letter format.';
     $('sentence-builder').hidden = mode !== 'builder';
     $('sentence-blocks').replaceChildren();
@@ -427,10 +433,41 @@ function renderSentenceBlocks() {
                 $('feedback').textContent = '';
                 $('feedback').className = 'feedback';
             }
+            updateSentenceBuilderTranslation();
             renderSentenceBlocks();
         });
         container.append(button);
     });
+}
+
+function updateSentenceBuilderTranslation() {
+    let englishTranslation = 'Build a sentence';
+
+    if (current.blocks.length === 1) {
+        englishTranslation = current.blocks[0].translation;
+    } else if (current.blocks.length === 2) {
+        const noun = current.blocks[0];
+        const predicate = current.blocks[1];
+        const isPronoun = ['I', 'you', 'he', 'she', 'we', 'they'].includes(noun.translation.toLowerCase());
+        const subject = isPronoun ? noun.translation : 'the ' + noun.translation;
+        if (predicate.kind === 'Verb') {
+            const usesThirdPerson = !['I', 'you', 'we', 'they'].includes(noun.translation.toLowerCase());
+            const verb = usesThirdPerson ? predicate.thirdPerson || predicate.translation : predicate.translation;
+            englishTranslation = subject + ' ' + verb + '.';
+        } else {
+            const linkingVerb = noun.translation.toLowerCase() === 'you' ? ' are ' : ' is ';
+            englishTranslation = subject + linkingVerb + predicate.translation + '.';
+        }
+    }
+
+    const capitalizedTranslation = 'English: ' + englishTranslation.charAt(0).toLocaleUpperCase('en') + englishTranslation.slice(1);
+    
+    if (englishTranslation !== 'Build a sentence') {
+        $('question').textContent = capitalizedTranslation;
+    }
+    else {
+        $('question').textContent = 'Build a sentence';
+    }
 }
 
 function updateProgress() {

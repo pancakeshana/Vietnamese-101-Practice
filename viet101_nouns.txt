@@ -1,3 +1,4 @@
-anh
-mèo
-sách
+anh | you
+anh ấy | he
+mèo | cat
+sách | book
