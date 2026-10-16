@@ -113,7 +113,7 @@ h1 {
 
 .tabs {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
     padding: 6px;
     border: 1px solid #e9c778;

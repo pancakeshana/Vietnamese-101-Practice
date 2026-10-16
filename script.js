@@ -102,6 +102,55 @@ const sentences = [
     { answer: 'NAM NÓI TIẾNG GÌ?', clue: 'What language does Nam speak?' }
 ];
 
+function parseClassifierQuestions(text) {
+    const questions = [];
+
+    text.split(/\r?\n/).forEach((line) => {
+        const examples = line.match(/^\s*-\s*Examples:\s*(.+)$/i);
+        if (!examples) return;
+
+        examples[1].split(/\s*,\s*/).forEach((example) => {
+            const match = example.match(/^(.+?)\s+\((.+)\)$/);
+            if (!match) return;
+
+            const [classifier, ...objectWords] = match[1].trim().split(/\s+/);
+            if (!classifier || objectWords.length === 0) return;
+
+            questions.push({
+                answer: classifier,
+                clue: match[2].trim()
+            });
+        });
+    });
+
+    if (questions.length === 0) {
+        throw new Error('No classifier examples were found in the source file.');
+    }
+
+    return questions;
+}
+
+let classifierQuestions = null;
+let classifierLoadPromise = null;
+
+function loadClassifierQuestions() {
+    if (classifierQuestions) return Promise.resolve(classifierQuestions);
+    if (!classifierLoadPromise) {
+        classifierLoadPromise = fetch('viet101_classifiers.txt')
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('The classifier file could not be loaded.');
+                }
+                return response.text();
+            })
+            .then((text) => {
+                classifierQuestions = parseClassifierQuestions(text);
+                return classifierQuestions;
+            });
+    }
+    return classifierLoadPromise;
+}
+
 /**
  * A helper function for finding an HTML element by its ID. 
  * This is an arrow function.
@@ -113,7 +162,8 @@ const sentences = [
 const $ = (id) => document.getElementById(id);
 
 //Keep the two tab elements in an array so setMode() can update them together.
-const tabs = [$('vocab-tab'), $('sentence-tab')];
+const tabs = [$('vocab-tab'), $('sentence-tab'), $('classifier-tab')];
+const modes = ['vocab', 'sentence', 'classifiers'];
 
 /**
  * These variables track the quiz between user actions. 
@@ -131,11 +181,14 @@ let locked = false; //True after the question is completed, to prevent extra sub
 
 //The "? :" conditional (ternary) chooses the list matching the current mode.
 function questionList() {
-    return mode === 'vocab' ? vocabulary : sentences;
+    if (mode === 'vocab') return vocabulary;
+    if (mode === 'sentence') return sentences;
+    return classifierQuestions || [];
 }
 
 function nextQuestion() {
     const list = questionList();
+    if (list.length === 0) return;
 
     //Math.random() returns a number from 0 up to (but excluding) 1.
     //Multiplying by the list length and rounding down picks a valid index.
@@ -152,14 +205,23 @@ function nextQuestion() {
     locked = false;
 
     //Remember, $(ID) refers to the ID in the HTML file.
-    $('mode-label').textContent = mode === 'vocab' ? 'WORD SPELLING' : 'SENTENCE TRANSLATION';
-    $('question-label').textContent = mode === 'vocab' ? 'Write the corresponding word in Vietnamese using the given definition.' : 'Translate this sentence into Vietnamese.';
+    $('mode-label').textContent = mode === 'vocab' ? 'WORD SPELLING' : mode === 'sentence' ? 'SENTENCE TRANSLATION' : 'CLASSIFIER PRACTICE';
+    $('question-label').textContent = mode === 'vocab'
+        ? 'Write the corresponding word in Vietnamese using the given definition.'
+        : mode === 'sentence'
+            ? 'Translate this sentence into Vietnamese.'
+            : 'Type the Vietnamese classifier for this object.';
     $('question').textContent = current.clue;
-    $('meaning').textContent = mode === 'vocab' ? 'Yes, accents do matter. Just give it a try.' : 'Use the Vietnamese sentence and punctuation.';
+    $('meaning').textContent = mode === 'vocab'
+        ? 'Yes, accents do matter. Just give it a try.'
+        : mode === 'sentence'
+            ? 'Use the Vietnamese sentence and punctuation.'
+            : 'Type the classifier only (for example, cái).';
     $('answer').value = '';
     $('answer').disabled = false;
     $('submit-button').disabled = false;
     $('submit-button').textContent = 'Check answer.';
+    $('skip-button').disabled = false;
     $('feedback').textContent = '';
     $('feedback').className = 'feedback';
     $('next-button').hidden = true;
@@ -226,14 +288,40 @@ function finishQuestion() {
 
 //Switch between quiz modes, update the tabs' visual and accessibility states,
 //then load a question from the selected mode.
-function setMode(nextMode) {
+async function setMode(nextMode) {
     mode = nextMode;
     previousIndex = -1;
     tabs.forEach((tab, index) => {
-        const active = index === (mode === 'vocab' ? 0 : 1);
+        const active = modes[index] === mode;
         tab.classList.toggle('active', active);
         tab.setAttribute('aria-selected', String(active));
     });
+
+    if (mode === 'classifiers' && !classifierQuestions) {
+        $('mode-label').textContent = 'CLASSIFIER PRACTICE';
+        $('question-label').textContent = 'Loading classifier examples…';
+        $('question').textContent = 'Loading…';
+        $('meaning').textContent = 'Using examples from viet101_classifiers.txt.';
+        $('answer').value = '';
+        $('answer').disabled = true;
+        $('submit-button').disabled = true;
+        $('skip-button').disabled = true;
+        $('next-button').hidden = true;
+        $('feedback').textContent = '';
+        $('feedback').className = 'feedback';
+
+        try {
+            await loadClassifierQuestions();
+        } catch (error) {
+            classifierLoadPromise = null;
+            $('feedback').textContent = 'Could not load classifier examples. Please check that viet101_classifiers.txt is available and try again.';
+            $('feedback').className = 'feedback incorrect';
+            return;
+        }
+
+        if (mode !== 'classifiers') return;
+    }
+
     nextQuestion();
 }
 
@@ -245,6 +333,7 @@ $('skip-button').addEventListener('click', nextQuestion);
 //Arrow functions here pass a specific mode into setMode when a tab is clicked.
 $('vocab-tab').addEventListener('click', () => setMode('vocab'));
 $('sentence-tab').addEventListener('click', () => setMode('sentence'));
+$('classifier-tab').addEventListener('click', () => setMode('classifiers'));
 
 //Initialize the page with the first vocabulary question.
 nextQuestion();
