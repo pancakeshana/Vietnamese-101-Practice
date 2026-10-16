@@ -33,6 +33,7 @@
                 <button class="tab" id="classifier-tab" type="button" role="tab">Classifiers</button>
 
                 <button class="tab" id="numbers-tab" type="button" role="tab">Numbers</button>
+                <button class="tab" id="builder-tab" type="button" role="tab">Sentence Builder</button>
             </div>
 
             <!--Progress row.-->
@@ -52,6 +53,11 @@
             <h2 class="question" id="question">Hello / hi</h2>
 
             <p class="meaning" id="meaning">Yes, accents do matter. Just give it a try.</p>
+
+            <div class="sentence-builder" id="sentence-builder" hidden>
+                <p class="builder-instruction">Tap a noun, then a verb or adjective. Tap a chosen word again to remove it.</p>
+                <div class="sentence-blocks" id="sentence-blocks" aria-label="Sentence words"></div>
+            </div>
 
             <!--Where users put answers in.-->
             <form id="answer-form" autocomplete="off">

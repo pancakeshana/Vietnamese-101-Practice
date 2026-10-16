@@ -211,6 +211,82 @@ function loadNumbers() {
     return numberLoadPromise;
 }
 
+function parseSentenceBuilderWords(text, fileName) {
+    const words = Array.from(new Set(text.split(/\r?\n/).map((word) => word.trim()).filter(Boolean)));
+    if (words.length < 3) {
+        throw new Error(fileName + ' needs at least three distinct words for Sentence Builder.');
+    }
+    return words;
+}
+
+function shuffleSentenceBuilderItems(items) {
+    const shuffled = [...items];
+    for (let index = shuffled.length - 1; index > 0; index--) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+    }
+    return shuffled;
+}
+
+function createSentenceBuilderChoices(words, answer, kind) {
+    const choices = answer === null
+        ? shuffleSentenceBuilderItems(words).slice(0, 3).map((word) => ({ word, kind }))
+        : [
+            { word: answer, kind },
+            ...shuffleSentenceBuilderItems(words.filter((word) => word !== answer))
+                .slice(0, 2)
+                .map((word) => ({ word, kind }))
+        ];
+    return shuffleSentenceBuilderItems(choices);
+}
+
+let sentenceBuilderQuestions = null;
+let sentenceBuilderLoadPromise = null;
+
+function loadSentenceBuilderQuestions() {
+    if (sentenceBuilderQuestions) return Promise.resolve(sentenceBuilderQuestions);
+    if (!sentenceBuilderLoadPromise) {
+        const files = [
+            'viet101_nouns.txt',
+            'viet101_verbs.txt',
+            'viet101_adjectives.txt'
+        ];
+
+        sentenceBuilderLoadPromise = Promise.all(files.map((fileName) => fetch(fileName)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(fileName + ' could not be loaded.');
+                }
+                return response.text();
+            })
+            .then((text) => parseSentenceBuilderWords(text, fileName))))
+            .then(([nouns, verbs, adjectives]) => {
+                const predicates = [
+                    ...verbs.map((word) => ({ word: word, kind: 'Verb' })),
+                    ...adjectives.map((word) => ({ word: word, kind: 'Adjective' }))
+                ];
+                sentenceBuilderQuestions = [];
+
+                nouns.forEach((noun) => {
+                    predicates.forEach((predicate) => {
+                        const choices = [
+                            ...createSentenceBuilderChoices(nouns, noun, 'Noun'),
+                            ...createSentenceBuilderChoices(verbs, predicate.kind === 'Verb' ? predicate.word : null, 'Verb'),
+                            ...createSentenceBuilderChoices(adjectives, predicate.kind === 'Adjective' ? predicate.word : null, 'Adjective')
+                        ];
+                        sentenceBuilderQuestions.push({
+                            answer: noun + ' ' + predicate.word,
+                            blocks: [],
+                            choices: shuffleSentenceBuilderItems(choices)
+                        });
+                    });
+                });
+                return sentenceBuilderQuestions;
+            });
+    }
+    return sentenceBuilderLoadPromise;
+}
+
 /**
  * A helper function for finding an HTML element by its ID. 
  * This is an arrow function.
@@ -222,8 +298,8 @@ function loadNumbers() {
 const $ = (id) => document.getElementById(id);
 
 //Keep the two tab elements in an array so setMode() can update them together.
-const tabs = [$('vocab-tab'), $('sentence-tab'), $('classifier-tab'), $('numbers-tab')];
-const modes = ['vocab', 'sentence', 'classifiers', 'numbers'];
+const tabs = [$('vocab-tab'), $('sentence-tab'), $('classifier-tab'), $('numbers-tab'), $('builder-tab')];
+const modes = ['vocab', 'sentence', 'classifiers', 'numbers', 'builder'];
 
 /**
  * These variables track the quiz between user actions. 
@@ -238,12 +314,12 @@ let current = null; //Currently displayed question object.
 let previousIndex = -1; //Last question's position, used to avoid immediate repeats.
 let attempts = 3;
 let locked = false; //True after the question is completed, to prevent extra submissions.
-
 //The "? :" conditional (ternary) chooses the list matching the current mode.
 function questionList() {
     if (mode === 'vocab') return vocabulary;
     if (mode === 'sentence') return sentences;
     if (mode === 'classifiers') return classifierQuestions;
+    if (mode === 'builder') return sentenceBuilderQuestions || [];
     return numberQuestions || [];
 }
 
@@ -259,39 +335,102 @@ function nextQuestion() {
     //If the random pick repeats the previous item, advance one slot instead.
     if (list.length > 1 && index === previousIndex) index = (index + 1) % list.length;
     previousIndex = index;
-    current = list[index];
+    current = mode === 'builder'
+        ? { ...list[index], blocks: [], choices: list[index].choices.map((choice) => ({ ...choice })) }
+        : list[index];
 
     //Reset state and update the page for the new question.
     attempts = 3;
     locked = false;
 
     //Remember, $(ID) refers to the ID in the HTML file.
-    $('mode-label').textContent = mode === 'vocab' ? 'WORD SPELLING' : mode === 'sentence' ? 'SENTENCE TRANSLATION' : mode === 'classifiers' ? 'CLASSIFIER PRACTICE' : 'NUMBER PRACTICE';
+    $('mode-label').textContent = mode === 'vocab' ? 'WORD SPELLING' : mode === 'sentence' ? 'SENTENCE TRANSLATION' : mode === 'classifiers' ? 'CLASSIFIER PRACTICE' : mode === 'builder' ? 'SENTENCE BUILDER' : 'NUMBER PRACTICE';
     $('question-label').textContent = mode === 'vocab'
         ? 'Write the corresponding word in Vietnamese using the given definition.'
         : mode === 'sentence'
             ? 'Translate this sentence into Vietnamese.'
         : mode === 'classifiers'
             ? 'Type the Vietnamese classifier for this object.'
+        : mode === 'builder'
+            ? 'Build a Noun + Verb or Noun + Adjective sentence.'
             : 'Type the number in Vietnamese.';
-    $('question').textContent = current.clue;
+    $('question').textContent = mode === 'builder' ? 'Build a sentence' : current.clue;
     $('meaning').textContent = mode === 'vocab'
         ? 'Yes, accents do matter. Just give it a try.'
         : mode === 'sentence'
             ? 'Use the Vietnamese sentence and punctuation.'
         : mode === 'classifiers'
             ? 'Type the classifier only (for example, cái).'
+        : mode === 'builder'
+            ? 'Choose a noun, then a verb or adjective.'
             : 'Translate the number in letter format.';
+    $('sentence-builder').hidden = mode !== 'builder';
+    $('sentence-blocks').replaceChildren();
+    if (mode === 'builder') renderSentenceBlocks();
     $('answer').value = '';
+    $('answer').hidden = mode === 'builder';
+    $('answer').required = mode !== 'builder';
     $('answer').disabled = false;
     $('submit-button').disabled = false;
-    $('submit-button').textContent = 'Check answer.';
+    $('submit-button').textContent = mode === 'builder' ? 'Check sentence' : 'Check answer.';
     $('skip-button').disabled = false;
     $('feedback').textContent = '';
     $('feedback').className = 'feedback';
     $('next-button').hidden = true;
     updateProgress();
-    $('answer').focus();
+    if (mode !== 'builder') $('answer').focus();
+}
+
+function renderSentenceBlocks() {
+    const container = $('sentence-blocks');
+    container.replaceChildren();
+
+    current.choices.forEach((choice, index) => {
+        const selectionIndex = current.blocks.findIndex((block) => block.choiceIndex === index);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'sentence-block';
+        button.disabled = locked;
+        button.setAttribute('aria-pressed', String(selectionIndex >= 0));
+        button.setAttribute('aria-label', choice.kind + ': ' + choice.word + (selectionIndex >= 0 ? ', sentence word ' + (selectionIndex + 1) : ''));
+
+        const kind = document.createElement('span');
+        kind.className = 'sentence-block-kind';
+        kind.textContent = choice.kind;
+        const word = document.createElement('span');
+        word.textContent = choice.word;
+        const order = document.createElement('span');
+        order.className = 'sentence-block-order';
+        order.textContent = selectionIndex >= 0 ? String(selectionIndex + 1) : '';
+        button.append(kind, word, order);
+
+        button.addEventListener('click', () => {
+            if (locked) return;
+            if (selectionIndex >= 0) {
+                current.blocks.splice(selectionIndex, 1);
+                if (current.blocks.length > 0 && current.blocks[0].kind !== 'Noun') current.blocks = [];
+                $('feedback').textContent = '';
+                $('feedback').className = 'feedback';
+            } else if (current.blocks.length === 0 && choice.kind !== 'Noun') {
+                $('feedback').textContent = 'Start with a noun.';
+                $('feedback').className = 'feedback incorrect';
+                return;
+            } else if (current.blocks.length === 1 && choice.kind === 'Noun') {
+                $('feedback').textContent = 'Choose a verb or adjective next.';
+                $('feedback').className = 'feedback incorrect';
+                return;
+            } else if (current.blocks.length >= 2) {
+                $('feedback').textContent = 'Your sentence already has two words. Remove a choice to change it.';
+                $('feedback').className = 'feedback incorrect';
+            } else {
+                current.blocks.push({ ...choice, choiceIndex: index });
+                $('feedback').textContent = '';
+                $('feedback').className = 'feedback';
+            }
+            renderSentenceBlocks();
+        });
+        container.append(button);
+    });
 }
 
 function updateProgress() {
@@ -314,8 +453,21 @@ function normalize(value) {
 function checkAnswer(event) {
     event.preventDefault();
     if (locked) return;
+    if (mode === 'builder') {
+        if (current.blocks.length !== 2) {
+            $('feedback').textContent = 'Select a noun and a verb or adjective in that order.';
+            $('feedback').className = 'feedback incorrect';
+            return;
+        }
+        locked = true;
+        $('feedback').textContent = 'Correct! Well done! Or shall I say, giỏi lắm!';
+        $('feedback').className = 'feedback correct';
+        finishQuestion();
+        return;
+    }
 
     const answer = normalize($('answer').value);
+    
     if (!answer) { $('answer').focus(); return; }
 
     //Compare normalized learner input with the expected answer.
@@ -334,7 +486,7 @@ function checkAnswer(event) {
     if (attempts > 0) {
         $('feedback').textContent = 'Not quite. Try again—you have ' + attempts + ' more ' + (attempts === 1 ? 'try' : 'tries') + '.';
         $('feedback').className = 'feedback incorrect';
-        $('answer').select();
+        if (mode !== 'builder') $('answer').select();
     } else {
         locked = true;
         $('feedback').textContent = 'The answer is: ' + current.answer;
@@ -347,6 +499,7 @@ function checkAnswer(event) {
 function finishQuestion() {
     $('answer').disabled = true;
     $('submit-button').disabled = true;
+    if (mode === 'builder') renderSentenceBlocks();
     $('next-button').hidden = false;
     $('next-button').focus();
 }
@@ -412,6 +565,44 @@ async function setMode(nextMode) {
         if (mode !== 'numbers') return;
     }
 
+    if (mode === 'builder' && !sentenceBuilderQuestions) {
+        $('mode-label').textContent = 'SENTENCE BUILDER';
+        $('question-label').textContent = 'Loading word lists…';
+        $('question').textContent = 'Loading…';
+        $('meaning').textContent = 'Choose from three nouns, three verbs, and three adjectives.';
+        $('sentence-builder').hidden = true;
+        $('answer').hidden = true;
+        $('answer').disabled = true;
+        $('submit-button').disabled = true;
+        $('skip-button').disabled = true;
+        $('next-button').hidden = true;
+        $('feedback').textContent = '';
+        $('feedback').className = 'feedback';
+
+        try {
+            await loadSentenceBuilderQuestions();
+        } catch (error) {
+            sentenceBuilderLoadPromise = null;
+            if (mode !== 'builder') return;
+            const message = error instanceof Error ? error.message : 'Please check that the word files are available.';
+            $('feedback').textContent = 'Could not load sentence builder words. ' + message;
+            $('feedback').className = 'feedback incorrect';
+            return;
+        }
+
+        if (mode !== 'builder') return;
+        if (sentenceBuilderQuestions.length === 0) {
+            $('feedback').textContent = 'Add words to the three text files to start building sentences.';
+            $('feedback').className = 'feedback incorrect';
+            return;
+        }
+    }
+
+    $('sentence-builder').hidden = mode !== 'builder';
+    $('answer').hidden = mode === 'builder';
+    $('answer').disabled = false;
+    $('submit-button').disabled = false;
+    $('skip-button').disabled = false;
     nextQuestion();
 }
 
@@ -425,6 +616,7 @@ $('vocab-tab').addEventListener('click', () => setMode('vocab'));
 $('sentence-tab').addEventListener('click', () => setMode('sentence'));
 $('classifier-tab').addEventListener('click', () => setMode('classifiers'));
 $('numbers-tab').addEventListener('click', () => setMode('numbers'));
+$('builder-tab').addEventListener('click', () => setMode('builder'));
 
 //Initialize the page with the first vocabulary question.
 nextQuestion();
