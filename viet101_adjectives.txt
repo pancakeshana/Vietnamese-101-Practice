@@ -1,3 +1,59 @@
-cao | tall / high
-đẹp | beautiful / pretty
+cao | tall
+thấp | short (height)
+ngắn | short (length)
+dài | long
+to | big
+nhỏ | small
+đẹp | beautiful
+xấu | ugly / bad
+tốt | good
+mới | new
+cũ | old (object)
+già | old (person)
+trẻ | young
+nhanh | fast
+chậm | slow
+nóng | hot
+lạnh | cold
+ấm | warm
+mát | cool (temperature)
+sạch | clean
+bẩn | dirty
+vui | happy
+buồn | sad
+mệt | tired
+bận | busy
+rảnh | available
+đắt | expensive
+rẻ | cheap
+dễ | easy
+khó | difficult
+sáng | bright
+tối | dark
+nặng | heavy
+nhẹ | lightweight
+đầy | full
+trống | empty
 ngọt | sweet
+mặn | salty
+chua | sour
+cay | spicy
+đắng | bitter
+thơm | fragrant
+hôi | smelly
+hiền | gentle / kind
+dữ | fierce / aggressive
+thông minh | smart / intelligent
+ngoan | well-behaved
+chăm chỉ | hardworking
+lười | lazy
+gần | near
+xa | far
+mỏng | thin
+dày | thick
+rộng | wide / spacious
+hẹp | narrow
+cứng | hard
+mềm | soft
+khô | dry
+ướt | wet

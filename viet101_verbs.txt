@@ -1,3 +1,41 @@
 ăn | eat | eats
 học | study | studies
 nói | speak | speaks
+uống | drink | drinks
+ngủ | sleep | sleeps
+đi | go | goes
+đến | come | comes
+chạy | run | runs
+đi bộ | walk | walks
+làm | do | does
+làm | make | makes
+xem | watch | watches
+nghe | listen | listens
+đọc | read | reads
+viết | write | writes
+dạy | teach | teaches
+mua | buy | buys
+bán | sell | sells
+nghĩ | think | thinks
+biết | know | knows
+hiểu | understand | understands
+thích | like | likes
+yêu | love | loves
+muốn | want | wants
+cần | need | needs
+cho | give | gives
+nhận | receive | receives
+sống | live | lives
+làm việc | work | works
+mở | open | opens
+đóng | close | closes
+giúp | help | helps
+tìm | look for | looks for
+dùng | use | uses
+thấy | see | sees
+gặp | meet | meets
+chờ | wait | waits
+gửi | send | sends
+nấu | cook | cooks
+cười | smile | smiles
+khóc | cry | cries

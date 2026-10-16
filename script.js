@@ -253,7 +253,7 @@ function loadSentenceBuilderQuestions() {
     if (sentenceBuilderQuestions) return Promise.resolve(sentenceBuilderQuestions);
     if (!sentenceBuilderLoadPromise) {
         const files = [
-            'viet101_nouns.txt',
+            'viet101_pronouns.txt',
             'viet101_verbs.txt',
             'viet101_adjectives.txt'
         ];
@@ -448,14 +448,18 @@ function updateSentenceBuilderTranslation() {
     } else if (current.blocks.length === 2) {
         const noun = current.blocks[0];
         const predicate = current.blocks[1];
-        const isPronoun = ['I', 'you', 'he', 'she', 'we', 'they'].includes(noun.translation.toLowerCase());
+        const isPronoun = ['i', 'you', 'he', 'she', 'we (without the listener)', 'we (with the listener)', 'they'].includes(noun.translation.toLowerCase());
         const subject = isPronoun ? noun.translation : 'the ' + noun.translation;
         if (predicate.kind === 'Verb') {
-            const usesThirdPerson = !['I', 'you', 'we', 'they'].includes(noun.translation.toLowerCase());
+            const usesThirdPerson = !['i', 'you', 'we (without the listener)', 'we (with the listener)', 'they'].includes(noun.translation.toLowerCase());
             const verb = usesThirdPerson ? predicate.thirdPerson || predicate.translation : predicate.translation;
             englishTranslation = subject + ' ' + verb + '.';
         } else {
-            const linkingVerb = noun.translation.toLowerCase() === 'you' ? ' are ' : ' is ';
+            const linkingVerb = noun.translation.toLowerCase() === 'you' ? ' are ' 
+                    : noun.translation.toLowerCase() === 'i' ? ' am ' 
+                    : noun.translation.toLowerCase() === 'we (without the listener)' ? ' are ' 
+                    : noun.translation.toLowerCase() === 'we (with the listener)' ? ' are ' 
+                    : ' is ';
             englishTranslation = subject + linkingVerb + predicate.translation + '.';
         }
     }

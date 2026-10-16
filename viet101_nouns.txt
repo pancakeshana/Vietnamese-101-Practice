@@ -1,4 +1,24 @@
-anh | you
-anh ấy | he
-mèo | cat
+nhà | house
+trường | school
 sách | book
+bút | pen
+xe | vehicle
+bàn | table
+ghế | chair
+nước | water
+cơm | cooked rice
+trà | tea
+cà phê | coffee
+thức ăn | food
+tiền | money
+ngày | day
+đêm | night
+thời gian | time
+công việc | job
+tên | name
+gia đình | family
+bạn bè | friends
+mèo | cat
+chó | dog
+mặt trời | sun
+mặt trăng | moon
