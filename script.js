@@ -102,6 +102,7 @@ const sentences = [
     { answer: 'NAM NÓI TIẾNG GÌ?', clue: 'What language does Nam speak?' }
 ];
 
+//This parses / formats the TXT file.
 function parseClassifierQuestions(text) {
     const questions = [];
 
@@ -151,6 +152,58 @@ function loadClassifierQuestions() {
     return classifierLoadPromise;
 }
 
+//For the number translation questions.
+function parseNumbers(text) {
+    //The JS split() splits a String into an array of elements, 
+    //depending on the delimiter between, such as " " or "," or "-".
+    const numArray = text.split(" - ");
+    const questions = [];
+
+    //Oh yeah, let's apply some Java.
+    for (let i = 0; i < numArray.length; i + 2) {
+        questions.push({
+            answer: numArray[i + 1],
+            clue: numArray[i]
+        });
+        answers.push(numArray[i + 1]);
+    }
+
+    //Throws error if there's literally nothing to base questions off of.
+    if (questions.length === 0) {
+        throw new Error('No classifier examples were found in the source file.');
+    }
+
+    return questions;
+}
+
+let numberQuestions = null;
+let numberLoadPromise = null;
+
+//Copied over from loadClassifierQuestions().
+function loadNumbers() {
+    //What the heck is a "Promise" class??
+
+    //I guess if the User clicks a certain tab, then 
+    //these questions appear to "fulfill" a promise?
+    if (numberQuestions) return Promise.resolve(numberQuestions);
+
+    if (!numberLoadPromise) {
+        numberLoadPromise = fetch('viet101_numbers.txt')
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('The number file could not be loaded.');
+                }
+                return response.text();
+            })
+            .then((text) => {
+                numberQuestions = parseNumbers(text);
+                return numberQuestions;
+            });
+    }
+
+    return numberLoadPromise;
+}
+
 /**
  * A helper function for finding an HTML element by its ID. 
  * This is an arrow function.
@@ -162,8 +215,8 @@ function loadClassifierQuestions() {
 const $ = (id) => document.getElementById(id);
 
 //Keep the two tab elements in an array so setMode() can update them together.
-const tabs = [$('vocab-tab'), $('sentence-tab'), $('classifier-tab')];
-const modes = ['vocab', 'sentence', 'classifiers'];
+const tabs = [$('vocab-tab'), $('sentence-tab'), $('classifier-tab'), $('numbers-tab')];
+const modes = ['vocab', 'sentence', 'classifiers', 'numbers'];
 
 /**
  * These variables track the quiz between user actions. 
@@ -183,7 +236,8 @@ let locked = false; //True after the question is completed, to prevent extra sub
 function questionList() {
     if (mode === 'vocab') return vocabulary;
     if (mode === 'sentence') return sentences;
-    return classifierQuestions || [];
+    if (mode === 'classifiers') return classifierQuestions;
+    return numberQuestions || [];
 }
 
 function nextQuestion() {
@@ -205,18 +259,22 @@ function nextQuestion() {
     locked = false;
 
     //Remember, $(ID) refers to the ID in the HTML file.
-    $('mode-label').textContent = mode === 'vocab' ? 'WORD SPELLING' : mode === 'sentence' ? 'SENTENCE TRANSLATION' : 'CLASSIFIER PRACTICE';
+    $('mode-label').textContent = mode === 'vocab' ? 'WORD SPELLING' : mode === 'sentence' ? 'SENTENCE TRANSLATION' : mode === 'classifiers' ? 'CLASSIFIER PRACTICE' : 'NUMBER PRACTICE';
     $('question-label').textContent = mode === 'vocab'
         ? 'Write the corresponding word in Vietnamese using the given definition.'
         : mode === 'sentence'
             ? 'Translate this sentence into Vietnamese.'
-            : 'Type the Vietnamese classifier for this object.';
+        : mode === 'classifiers'
+            ? 'Type the Vietnamese classifier for this object.'
+            : 'Type the number in Vietnamese.';
     $('question').textContent = current.clue;
     $('meaning').textContent = mode === 'vocab'
         ? 'Yes, accents do matter. Just give it a try.'
         : mode === 'sentence'
             ? 'Use the Vietnamese sentence and punctuation.'
-            : 'Type the classifier only (for example, cái).';
+        : mode === 'classifiers'
+            ? 'Type the classifier only (for example, cái).'
+            : 'Translate the number in letter format.';
     $('answer').value = '';
     $('answer').disabled = false;
     $('submit-button').disabled = false;
@@ -321,6 +379,31 @@ async function setMode(nextMode) {
 
         if (mode !== 'classifiers') return;
     }
+    
+    if (mode === 'numbers' && !numberQuestions) {
+        $('mode-label').textContent = 'NUMBER PRACTICE';
+        $('question-label').textContent = 'Loading number examples…';
+        $('question').textContent = 'Loading…';
+        $('meaning').textContent = 'Using examples from viet101_numbers.txt.';
+        $('answer').value = '';
+        $('answer').disabled = true;
+        $('submit-button').disabled = true;
+        $('skip-button').disabled = true;
+        $('next-button').hidden = true;
+        $('feedback').textContent = '';
+        $('feedback').className = 'feedback';
+
+        try {
+            await loadNumbers();
+        } catch (error) {
+            numberLoadPromise = null;
+            $('feedback').textContent = 'Could not load number examples. Please check that viet101_numbers.txt is available and try again.';
+            $('feedback').className = 'feedback incorrect';
+            return;
+        }
+
+        if (mode !== 'numbers') return;
+    }
 
     nextQuestion();
 }
@@ -334,6 +417,7 @@ $('skip-button').addEventListener('click', nextQuestion);
 $('vocab-tab').addEventListener('click', () => setMode('vocab'));
 $('sentence-tab').addEventListener('click', () => setMode('sentence'));
 $('classifier-tab').addEventListener('click', () => setMode('classifiers'));
+$('numbers-tab').addEventListener('click', () => setMode('numbers'));
 
 //Initialize the page with the first vocabulary question.
 nextQuestion();
